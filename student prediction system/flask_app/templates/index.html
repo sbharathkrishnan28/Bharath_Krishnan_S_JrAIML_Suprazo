@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Performance Prediction - Dashboard</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">Student Predictor</div>
+  <div class="subtitle">ML Dashboard</div>
+  <div class="nav-item active" data-page="overview"><span class="icon">📊</span><span>Overview</span></div>
+  <div class="nav-item" data-page="dataset"><span class="icon">📋</span><span>Dataset</span></div>
+  <div class="nav-item" data-page="visualizations"><span class="icon">📈</span><span>Visualizations</span></div>
+  <div class="nav-item" data-page="predict"><span class="icon">🎯</span><span>Predict</span></div>
+  <div class="nav-item" data-page="performance"><span class="icon">⚡</span><span>Performance</span></div>
+</aside>
+
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <div id="overview" class="page active">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Student Performance Prediction System using Linear Regression</p>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Total Records</div><div class="value" id="stat-records">-</div><div class="sub">Student entries</div></div>
+      <div class="stat-card"><div class="label">Features</div><div class="value" id="stat-features">-</div><div class="sub">Input variables</div></div>
+      <div class="stat-card"><div class="label">Missing Values</div><div class="value" id="stat-missing">-</div><div class="sub">Clean data</div></div>
+      <div class="stat-card green"><div class="label">R² Score</div><div class="value" id="stat-r2">-</div><div class="sub">Model accuracy</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">MAE</div><div class="value" id="stat-mae">-</div><div class="sub">Mean Absolute Error</div></div>
+      <div class="stat-card"><div class="label">Training Samples</div><div class="value" id="stat-train">-</div><div class="sub">80% split</div></div>
+      <div class="stat-card"><div class="label">Testing Samples</div><div class="value" id="stat-test">-</div><div class="sub">20% split</div></div>
+      <div class="stat-card"><div class="label">RMSE</div><div class="value" id="stat-rmse">-</div><div class="sub">Root Mean Squared Error</div></div>
+    </div>
+    <div class="chart-card"><h3>Feature Correlation with Final Score</h3><canvas id="corrChart" height="200"></canvas></div>
+  </div>
+
+  <!-- DATASET -->
+  <div id="dataset" class="page">
+    <h1 class="page-title">Dataset Explorer</h1>
+    <p class="page-subtitle">Browse and search through 5,000 student records</p>
+    <div class="table-container">
+      <div class="table-header">
+        <h3>Student Records</h3>
+        <input type="text" id="searchInput" class="search-box" placeholder="Search records...">
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Study Hours</th><th>Attendance %</th><th>Sleep Hours</th><th>Previous Score</th><th>Final Score</th></tr></thead>
+        <tbody id="datasetBody"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- VISUALIZATIONS -->
+  <div id="visualizations" class="page">
+    <h1 class="page-title">Data Visualizations</h1>
+    <p class="page-subtitle">Interactive charts showing data patterns and model results</p>
+    <div class="chart-grid">
+      <div class="chart-card"><h3>Study Hours vs Final Score</h3><canvas id="scatterChart"></canvas></div>
+      <div class="chart-card"><h3>Actual vs Predicted Scores</h3><canvas id="avpChart"></canvas></div>
+      <div class="chart-card"><h3>Feature Importance (Coefficients)</h3><canvas id="featureChart"></canvas></div>
+      <div class="chart-card"><h3>Study Hours Distribution</h3><canvas id="distStudyHours"></canvas></div>
+      <div class="chart-card"><h3>Attendance Distribution</h3><canvas id="distAttendance"></canvas></div>
+      <div class="chart-card"><h3>Sleep Hours Distribution</h3><canvas id="distSleepHours"></canvas></div>
+      <div class="chart-card"><h3>Previous Score Distribution</h3><canvas id="distPreviousScore"></canvas></div>
+      <div class="chart-card"><h3>Final Score Distribution</h3><canvas id="distFinalScore"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PREDICT -->
+  <div id="predict" class="page">
+    <h1 class="page-title">Predict Student Score</h1>
+    <p class="page-subtitle">Enter student details to predict their final examination score</p>
+    <div class="predict-section">
+      <div class="form-card">
+        <h3>Enter Student Details</h3>
+        <div class="form-group">
+          <label>Study Hours (per day) <span class="slider-val" id="val-study">6</span></label>
+          <input type="range" id="inp-study" min="1" max="12" step="0.5" value="6">
+        </div>
+        <div class="form-group">
+          <label>Attendance (%) <span class="slider-val" id="val-attend">70</span></label>
+          <input type="range" id="inp-attend" min="40" max="100" step="1" value="70">
+        </div>
+        <div class="form-group">
+          <label>Sleep Hours (per day) <span class="slider-val" id="val-sleep">7</span></label>
+          <input type="range" id="inp-sleep" min="3" max="10" step="0.5" value="7">
+        </div>
+        <div class="form-group">
+          <label>Previous Score <span class="slider-val" id="val-prev">65</span></label>
+          <input type="range" id="inp-prev" min="30" max="100" step="1" value="65">
+        </div>
+        <button class="btn-predict" onclick="makePrediction()">Predict Final Score</button>
+      </div>
+      <div>
+        <div class="result-card result-hidden" id="resultArea">
+          <h3>Prediction Result</h3>
+          <div class="result-score" id="predScore">-</div>
+          <div class="result-level" id="predLevel">-</div>
+          <hr style="border-color:rgba(255,255,255,0.08);margin:20px 0">
+          <h3 style="text-align:left;font-size:.9rem;margin-bottom:12px">Feature Contributions</h3>
+          <div id="contributions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div id="performance" class="page">
+    <h1 class="page-title">Model Performance</h1>
+    <p class="page-subtitle">Evaluation metrics and model coefficients for Linear Regression</p>
+    <div class="metric-hero">
+      <div class="big-score" id="perf-r2">-</div>
+      <div class="big-label">R² Score — Model Accuracy</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">MAE</div><div class="value" id="perf-mae">-</div><div class="sub">Mean Absolute Error</div></div>
+      <div class="stat-card"><div class="label">MSE</div><div class="value" id="perf-mse">-</div><div class="sub">Mean Squared Error</div></div>
+      <div class="stat-card"><div class="label">RMSE</div><div class="value" id="perf-rmse">-</div><div class="sub">Root Mean Squared Error</div></div>
+    </div>
+    <div class="table-container" style="margin-top:24px">
+      <div class="table-header"><h3>Model Coefficients (Linear Regression)</h3></div>
+      <table class="coeff-table">
+        <thead><tr><th>Feature</th><th>Coefficient</th><th>Impact</th></tr></thead>
+        <tbody id="coeffBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
